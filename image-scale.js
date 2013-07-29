@@ -35,21 +35,26 @@ var __scale = function (image, zoom) {
 			var yf = y * factor;
 	    // Find the starting index in the one-dimensional image data
 	    var i = (yf + xOffset) << 2;
-	    scaledImgData.data[destIndex  ] = imgData[i  ];
-	    scaledImgData.data[destIndex+1] = imgData[i+1];
-	    scaledImgData.data[destIndex+2] = imgData[i+2];
-	    scaledImgData.data[destIndex+3] = imgData[i+3];
-
-	    /*if (a == 0) {
+	    var a = imgData[i+3];
+	    if (a == 0) {
 	    	var c = image.naturalHeight/8; // checker size
 	    	if(xf%c >= c/2 && yf%c < c/2 || yf%c >= c/2 && xf%c < c/2) {
-	    		context.fillStyle = "rgba(255,255,255,1)";	
+	    		scaledImgData.data[destIndex  ] = 255;
+			    scaledImgData.data[destIndex+1] = 255;
+			    scaledImgData.data[destIndex+2] = 255;
+			    scaledImgData.data[destIndex+3] = 255;
 	    	} else {
-	    		context.fillStyle = "rgba(230,230,230,1)";
+	    		scaledImgData.data[destIndex  ] = 230;
+			    scaledImgData.data[destIndex+1] = 230;
+			    scaledImgData.data[destIndex+2] = 230;
+			    scaledImgData.data[destIndex+3] = 255;
 	    	}
 	    } else {
-	    	context.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
-	    }*/
+		    scaledImgData.data[destIndex  ] = imgData[i  ];
+		    scaledImgData.data[destIndex+1] = imgData[i+1];
+		    scaledImgData.data[destIndex+2] = imgData[i+2];
+				scaledImgData.data[destIndex+3] = a;
+	    }
 	    destIndex += 4;
 	  }
 	}
@@ -58,7 +63,7 @@ var __scale = function (image, zoom) {
 	return canvas;
 };
 
-var sizes = [64, 100, 128, 150, 200, 256, 300, 500, 1024, 4096];
+var sizes = [64, 100, 128, 128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  150, 200, 256, 300, 500, 500,500,500,500];
 window.scaleAndReplace = function (piskelId, event) {
 	var image = event.target || document.getElementById("image" + piskelId);
 	for (var i = 0 ; i < sizes.length ; i++) {

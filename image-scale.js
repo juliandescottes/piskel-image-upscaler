@@ -16,28 +16,31 @@ var __getImageData = function (image) {
 var __scale = function (image, zoom) {
 	var srcWidth = image.naturalWidth;
 	var srcHeight = image.naturalHeight;
-	var width = Math.round(zoom * image.naturalWidth);
-	var height = Math.round(zoom * image.naturalHeight);
+	var width = Math.round(zoom * srcWidth);
+	var height = Math.round(zoom * srcHeight);
 
 	var canvas = __createCanvas(width, height);
 	var context = canvas.getContext('2d');
 
-	var factor = 1/zoom; 
-	var imgData = __getImageData(image);
+	var factor = 1/zoom,
+			imgData = __getImageData(image),
+			scaledImgData = context.createImageData(width, height),
+			destIndex = 0;
+
 	// Draw the zoomed-up pixels to a different canvas context
 	for (var x=0;x<width;++x){
 		var xf = x * factor;
-		var	xOffset = (xf | 0) * image.naturalWidth;
+		var	xOffset = (xf | 0) * srcWidth;
 	  for (var y=0;y<height;++y){
 			var yf = y * factor;
 	    // Find the starting index in the one-dimensional image data
 	    var i = (yf + xOffset) << 2;
-	    var r = imgData[i  ];
-	    var g = imgData[i+1];
-	    var b = imgData[i+2];
-	    var a = imgData[i+3];
+	    scaledImgData.data[destIndex  ] = imgData[i  ];
+	    scaledImgData.data[destIndex+1] = imgData[i+1];
+	    scaledImgData.data[destIndex+2] = imgData[i+2];
+	    scaledImgData.data[destIndex+3] = imgData[i+3];
 
-	    if (a == 0) {
+	    /*if (a == 0) {
 	    	var c = image.naturalHeight/8; // checker size
 	    	if(xf%c >= c/2 && yf%c < c/2 || yf%c >= c/2 && xf%c < c/2) {
 	    		context.fillStyle = "rgba(255,255,255,1)";	
@@ -46,12 +49,11 @@ var __scale = function (image, zoom) {
 	    	}
 	    } else {
 	    	context.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
-	    } 
-	    context.fillRect(y,x,1,1);
+	    }*/
+	    destIndex += 4;
 	  }
 	}
-	context.fillStyle = "red"
-	context.fillText(width + " * " + height, 0,10);
+	context.putImageData(scaledImgData, 0, 0);
 
 	return canvas;
 };

@@ -22,48 +22,78 @@ var __scale = function (image, zoom) {
 	var canvas = __createCanvas(width, height);
 	var context = canvas.getContext('2d');
 
-	var factor = 1/zoom,
-			imgData = __getImageData(image),
-			scaledImgData = context.createImageData(width, height),
-			destIndex = 0;
+	if (zoom > 1) {
+		// Nearest neightbor
+		var factor = 1/zoom,
+			imgData = __getImageData(image);
 
-	// Draw the zoomed-up pixels to a different canvas context
-	for (var x=0;x<width;++x){
-		var xf = x * factor;
-		var	xOffset = (xf | 0) * srcWidth;
-	  for (var y=0;y<height;++y){
-			var yf = y * factor;
-	    // Find the starting index in the one-dimensional image data
-	    var i = (yf + xOffset) << 2;
-	    var a = imgData[i+3];
-	    if (a == 0) {
+		var xOffset = 0, yOffset = 0;
+		var yRanges = {};
+		// Draw the zoomed-up pixels to a different canvas context
+		for (var x=0;x<srcWidth;++x){
+			var	tmpX = xOffset; // => Math.floor(xf) * srcHeight ?
+			while (((tmpX*factor)|0) < x+1) {tmpX++}
+			xRange = tmpX - xOffset;
+		  for (var y=0;y<srcHeight;++y){
+				var	tmpY = yOffset; // => Math.floor(xf) * srcHeight ?
+				if (yRanges[y+""]) {
+					yRange = yRanges[y+""]
+				} else {
+					while (((tmpY*factor)|0) < y+1) {tmpY++}
+					yRange = tmpY - yOffset;
+					yRanges[y+""] = yRange;
+				}
+		    var i = (y*srcWidth + x)*4;
+		    var r = imgData[i  ];
+		    var g = imgData[i+1];
+		    var b = imgData[i+2];
+		    var a = imgData[i+3];
+		    if (a == 0) {
+		    	var c = image.naturalHeight/8; // checker size
+		    	if(x%c >= c/2 && y%c < c/2 || y%c >= c/2 && x%c < c/2) {
+		    		context.fillStyle = "rgba(255,255,255,1)";	
+		    	} else {
+		    		context.fillStyle = "rgba(230,230,230,1)";
+		    	}
+		    } else {
+		    	context.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
+		    } 
+		    context.fillRect(xOffset,yOffset,xRange,yRange);
+		    yOffset += yRange;
+		  }
+			yOffset = 0;
+		  xOffset += xRange;
+		}
+		return canvas;
+	} else {
+		for (var x=0;x<image.naturalWidth;++x){
+	  	for (var y=0;y<image.naturalHeight;++y){
 	    	var c = image.naturalHeight/8; // checker size
-	    	if(xf%c >= c/2 && yf%c < c/2 || yf%c >= c/2 && xf%c < c/2) {
-	    		scaledImgData.data[destIndex  ] = 255;
-			    scaledImgData.data[destIndex+1] = 255;
-			    scaledImgData.data[destIndex+2] = 255;
-			    scaledImgData.data[destIndex+3] = 255;
+	    	if(x%c >= c/2 && y%c < c/2 || y%c >= c/2 && x%c < c/2) {
+	    		context.fillStyle = "rgba(255,255,255,1)";	
 	    	} else {
-	    		scaledImgData.data[destIndex  ] = 230;
-			    scaledImgData.data[destIndex+1] = 230;
-			    scaledImgData.data[destIndex+2] = 230;
-			    scaledImgData.data[destIndex+3] = 255;
+	    		context.fillStyle = "rgba(230,230,230,1)";
 	    	}
-	    } else {
-		    scaledImgData.data[destIndex  ] = imgData[i  ];
-		    scaledImgData.data[destIndex+1] = imgData[i+1];
-		    scaledImgData.data[destIndex+2] = imgData[i+2];
-				scaledImgData.data[destIndex+3] = a;
+		    context.fillRect(x*zoom,y*zoom,zoom,zoom);
 	    }
-	    destIndex += 4;
 	  }
-	}
-	context.putImageData(scaledImgData, 0, 0);
+		var canvas2 = __createCanvas(width, height);
+		var context2 = canvas2.getContext('2d');
+		context2.save();
+  	context2.drawImage(canvas, 0, 0);
+  	context2.translate(canvas2.width/2, canvas2.height/2);
+		context2.scale(zoom, zoom);
+  	context2.drawImage(image, -srcWidth/2, -srcHeight/2);
+  	context2.restore();
+  	canvas2.setAttribute("data-src", image.src);
 
-	return canvas;
+		return canvas2;
+	}
+	
 };
 
-var sizes = [64, 100, 128, 128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  150, 200, 256, 300, 500, 500,500,500,500];
+// var sizes = [64, 100, 128, 128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  150, 200, 256, 300, 500, 500,500,500,500];
+var sizes = [32, 64, 100, 128, 200, 256, 300, 350, 500, 512];
 window.scaleAndReplace = function (piskelId, event) {
 	var image = event.target || document.getElementById("image" + piskelId);
 	for (var i = 0 ; i < sizes.length ; i++) {

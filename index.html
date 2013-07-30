@@ -4,15 +4,24 @@
 	<meta charset="UTF-8">
 	<title>Piskel perfect</title>
 	<style>
+	div {
+		overflow : auto;
+		float:left;
+	}
+	canvas {
+		float : left;
+	}
 	</style>
 </head>
 <body>
 	<script type="text/javascript" src="image-scale.js"></script>
-	<div>
-	<img 
-		id="image1" 
-		src="sprite.png" 
-		onload="window.scaleAndReplace('1', event)"/>
+	<div class="wrapper">
+		<div>
+			<img 
+				id="image1" 
+				src="sprite.png" 
+				onload="window.scaleAndReplace('1', event)"/>
+		</div>
 	</div>
 </body>
 </html>
